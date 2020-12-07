@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>SpringBoot and LayIM</title>
+    <style>
+        html{background-color: #333;}
+    </style>
+    <link rel="stylesheet" href="/static/js/layui/css/layui.css">
+    <script src="../static/js/layui/layui.js"></script>
+</head>
+<body>
+<script>
+
+    if(!/^http(s*):\/\//.test(location.href)){
+        alert('请部署到localhost上查看该演示');
+    }
+
+    layui.extend({
+        'socket':'/static/js/mods/socket'
+    });
+
+    layui.use(['layim','socket'], function(layim,socket){
+
+        if (!localStorage.getItem('im-uid')) {
+            var uid = window.prompt("请输入UID：");
+            if (uid) {
+                localStorage.setItem("im-uid", uid);
+                location.href = '/account/login?userId=' + uid;
+            }else{
+                location.href = location.href;
+            }
+        }
+
+        socket.config({
+            log:true,
+            server:'wss://fanpan26.com/ws/',
+            //server:'ws://localhost:8889',
+            token:'/account/token',
+            reconn:true
+        });
+        socket.on('msg',function (d) {
+            layim.getMessage(d);
+        })
+        //基础配置
+        layim.config({
+            init: {
+                url: '/layim/init'
+            }
+            ,members: {
+                url: '/layim/member'
+            }
+            ,uploadImage: {
+                url: '/upload/image' //（返回的数据格式见下文）
+                ,type: '' //默认post
+            }
+            ,uploadFile: {
+                url: '/upload/file' //（返回的数据格式见下文）
+                ,type: '' //默认post
+            }
+            ,isAudio: true //开启聊天工具栏音频
+            ,isVideo: true //开启聊天工具栏视频
+            ,initSkin: '5.jpg' //1-5 设置初始背景
+            ,notice: true //是否开启桌面消息提醒，默认false
+            ,msgbox: layui.cache.dir + 'css/modules/layim/html/msgbox.html' //消息盒子页面地址，若不开启，剔除该项即可
+            ,find: layui.cache.dir + 'css/modules/layim/html/find.html' //发现页面地址，若不开启，剔除该项即可
+            ,chatLog: '/chatlog' //聊天记录页面地址，若不开启，剔除该项即可
+
+        });
+
+        //监听在线状态的切换事件
+        layim.on('online', function(data){
+            //console.log(data);
+        });
+        //监听签名修改
+        layim.on('sign', function(value){
+            //console.log(value);
+        });
+
+        //监听layim建立就绪
+        layim.on('ready', function(res){
+
+        });
+        //监听发送消息
+        layim.on('sendMessage', function(data){
+            socket.send(data);
+        });
+        //监听查看群员
+        layim.on('members', function(data){
+            //console.log(data);
+        });
+
+        //监听聊天窗口的切换
+        layim.on('chatChange', function(res){
+            var type = res.data.type;
+            // console.log(res.data.id)
+            // if(type === 'friend'){
+            //     //模拟标注好友状态
+            //     //layim.setChatStatus('<span style="color:#FF5722;">在线</span>');
+            // } else if(type === 'group'){
+            //     //模拟系统消息
+            //     layim.getMessage({
+            //         system: true
+            //         ,id: res.data.id
+            //         ,type: "group"
+            //         ,content: '模拟群员'+(Math.random()*100|0) + '加入群聊'
+            //     });
+            // }
+        });
+
+
+    });
+</script>
+
+</body>
+</html>
